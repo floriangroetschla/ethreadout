@@ -30,13 +30,13 @@ public:
     //m_socket.open(boost::asio::ip::udp::v4());
   }
 
-  void receive() {
+  size_t receive() {
     boost::array<char, 128> buffer;
 
     boost::asio::ip::udp::endpoint sender_endpoint;
     size_t len = m_socket.receive_from(
     boost::asio::buffer(buffer), sender_endpoint);
-    std::cout.write(buffer.data(), len);
+    return len;
   }
 
 private:

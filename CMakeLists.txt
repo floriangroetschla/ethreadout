@@ -55,6 +55,8 @@ daq_add_plugin(VDEmulator duneDAQModule LINK_LIBRARIES appfwk::appfwk ethreadout
 
 ##############################################################################
 daq_add_application( udptest udptest.cxx TEST LINK_LIBRARIES appfwk::appfwk ethreadout ${BOOST_LIBS} )
+daq_add_application( udp_receiver udp_receiver.cxx TEST LINK_LIBRARIES appfwk::appfwk ethreadout ${BOOST_LIBS} )
+daq_add_application( udp_sender udp_sender.cxx TEST LINK_LIBRARIES appfwk::appfwk ethreadout ${BOOST_LIBS} )
 
 ##############################################################################
 #daq_add_unit_test(ValueWrapper_test)
