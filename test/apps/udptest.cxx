@@ -15,8 +15,8 @@ using namespace dunedaq::ethreadout;
 int
 main(int argc, char* argv[])
 {
-  UDPReceiver receiver(30000);
-  UDPSender sender(30001, "127.0.0.1", 30000);
+  UDPReceiver receiver("127.0.0.1", 30000);
+  UDPSender sender("127.0.0.1",30001, "127.0.0.1", 30000);
   char* payload = "test";
   sender.send(payload, 5);
   receiver.receive();

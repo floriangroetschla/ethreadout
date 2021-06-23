@@ -17,7 +17,7 @@ int
 main(int argc, char* argv[])
 {
   dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT superchunk;
-  UDPSender sender(30001, "127.0.0.1", 30000);
+  UDPSender sender("127.0.0.1", 30001, "127.0.0.1", 30000);
   char* payload = reinterpret_cast<char*>(&superchunk);
   while (true) {
     sender.send(payload, sizeof(superchunk));

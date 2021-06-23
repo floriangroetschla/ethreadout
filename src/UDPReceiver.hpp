@@ -23,19 +23,17 @@ namespace ethreadout {
 
 class UDPReceiver {
 public:
-  UDPReceiver(int port)
+  UDPReceiver(std::string ip, int port)
     : m_io_service()
-    , m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port))
+    , m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(ip), port))
   {
     //m_socket.open(boost::asio::ip::udp::v4());
   }
 
   size_t receive() {
-    boost::array<char, 128> buffer;
-
     boost::asio::ip::udp::endpoint sender_endpoint;
     size_t len = m_socket.receive_from(
-    boost::asio::buffer(buffer), sender_endpoint);
+    boost::asio::buffer(m_buffer), sender_endpoint);
     return len;
   }
 
@@ -43,7 +41,7 @@ private:
   boost::asio::io_service m_io_service;
   boost::asio::ip::udp::socket m_socket;
   boost::asio::ip::udp::endpoint m_endpoint;
-
+  boost::array<char, 5568> m_buffer;
 };
 
 } // namespace ethreadout

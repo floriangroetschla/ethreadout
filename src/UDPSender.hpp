@@ -23,9 +23,9 @@ namespace ethreadout {
 
 class UDPSender {
 public:
-  UDPSender(int source_port, std::string destination_ip, int destination_port)
+  UDPSender(std::string source_ip, int source_port, std::string destination_ip, int destination_port)
   : m_io_service()
-  , m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), source_port))
+  , m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(source_ip), source_port))
   {
     m_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(destination_ip), destination_port);
     //m_socket.open(boost::asio::ip::udp::v4());
