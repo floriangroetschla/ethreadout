@@ -8,11 +8,11 @@
 local moo = import "moo.jsonnet";
 
 // A schema builder in the given path (namespace)
-local ns = "dunedaq.ethreadout.vdemulator";
+local ns = "dunedaq.ethreadout.vdreceiver";
 local s = moo.oschema.schema(ns);
 
 // Object structure used by the test/fake producer module
-local vdemulator = {
+local vdreceiver = {
     size: s.number("Size", "u8",
                    doc="A count of very many things"),
 
@@ -37,16 +37,12 @@ local vdemulator = {
     choice : s.boolean("Choice"),
 
     conf: s.record("Conf", [
-        s.field("source_ip", self.string,
-                doc="Source ip"),
-        s.field("source_port", self.count,
-                doc="Source port"),
-        s.field("destination_ip", self.string,
-                doc="Destination ip"),
-        s.field("destination_port", self.count,
-                doc="Destination port")
-    ], doc="VD Emulator config"),
+        s.field("ip", self.string,
+                doc="IP to listen on"),
+        s.field("port", self.count,
+                doc="Port to use")
+    ], doc="VD receiver config"),
 
 };
 
-moo.oschema.sort_select(vdemulator, ns)
+moo.oschema.sort_select(vdreceiver, ns)

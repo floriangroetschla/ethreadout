@@ -21,6 +21,7 @@
 namespace dunedaq {
 namespace ethreadout {
 
+template<class RAWType>
 class UDPReceiver {
 public:
   UDPReceiver(std::string ip, int port)
@@ -35,18 +36,18 @@ public:
   }
 
 
-  size_t receive() {
+  bool receive(RAWType& element) {
     boost::asio::ip::udp::endpoint sender_endpoint;
     size_t len = m_socket.receive_from(
-    boost::asio::buffer(m_buffer), sender_endpoint);
-    return len;
+      boost::asio::buffer(reinterpret_cast<char*>(&element), sizeof(RAWType)), sender_endpoint);
+    return len == sizeof(RAWType);
   }
 
 private:
   boost::asio::io_service m_io_service;
   boost::asio::ip::udp::socket m_socket;
   boost::asio::ip::udp::endpoint m_endpoint;
-  boost::array<char, 5568> m_buffer;
+  boost::array<char, sizeof(RAWType)> m_buffer;
 };
 
 } // namespace ethreadout

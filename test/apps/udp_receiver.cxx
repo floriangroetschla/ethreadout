@@ -10,6 +10,7 @@
 #include "UDPReceiver.hpp"
 #include "UDPSender.hpp"
 #include "logging/Logging.hpp"
+#include "readout/ReadoutTypes.hpp"
 
 using namespace dunedaq::ethreadout;
 
@@ -37,11 +38,16 @@ main(int argc, char* argv[])
   std::vector<std::thread> threads;
   for (uint i = 0; i < 4; ++i) {
     threads.emplace_back([&]() {
-      UDPReceiver receiver("127.0.0.1", 30000);
+      UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT> receiver("127.0.0.1", 30000);
+      dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT element;
       while (true) {
-        size_t received_bytes = receiver.receive();
-        bytes_received_total += received_bytes;
-        bytes_received_since_last_statistics += received_bytes;
+        bool success = receiver.receive(element);
+        if (!success) {
+          std::cout << "Could not receive data" << std::endl;
+        } else {
+          bytes_received_total += sizeof(element);
+          bytes_received_since_last_statistics += sizeof(element);
+        }
       }
     });
   }

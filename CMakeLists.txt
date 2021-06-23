@@ -19,7 +19,7 @@ find_package(TRACE REQUIRED)
 find_package(Boost REQUIRED)
 set(BOOST_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
-daq_codegen( vdemulator.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
+daq_codegen( vdemulator.jsonnet vdreceiver.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
 daq_codegen( *info.jsonnet DEP_PKGS opmonlib TEMPLATES opmonlib/InfoStructs.hpp.j2 opmonlib/InfoNljs.hpp.j2 )
 
 ##############################################################################
@@ -48,6 +48,7 @@ daq_add_library(
 
 # Plugins
 daq_add_plugin(VDEmulator duneDAQModule LINK_LIBRARIES appfwk::appfwk ethreadout ${BOOST_LIBS})
+daq_add_plugin(VDReceiver duneDAQModule LINK_LIBRARIES appfwk::appfwk ethreadout ${BOOST_LIBS})
 
 ##############################################################################
 
