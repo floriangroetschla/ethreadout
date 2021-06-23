@@ -16,7 +16,6 @@ using namespace dunedaq::ethreadout;
 int
 main(int argc, char* argv[])
 {
-  UDPReceiver receiver("127.0.0.1", 30000);
   std::atomic<int64_t> bytes_received_total = 0;
   std::atomic<int64_t> bytes_received_since_last_statistics = 0;
   std::chrono::steady_clock::time_point time_point_last_statistics = std::chrono::steady_clock::now();
@@ -35,9 +34,15 @@ main(int argc, char* argv[])
     }
   });
 
-  while (true) {
-    size_t received_bytes = receiver.receive();
-    bytes_received_total += received_bytes;
-    bytes_received_since_last_statistics += received_bytes;
+  std::vector<std::thread> threads;
+  for (uint i = 0; i < 4; ++i) {
+    threads.emplace_back([&]() {
+      UDPReceiver receiver("127.0.0.1", 30000);
+      while (true) {
+        size_t received_bytes = receiver.receive();
+        bytes_received_total += received_bytes;
+        bytes_received_since_last_statistics += received_bytes;
+      }
+    });
   }
 }

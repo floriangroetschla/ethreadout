@@ -25,10 +25,15 @@ class UDPReceiver {
 public:
   UDPReceiver(std::string ip, int port)
     : m_io_service()
-    , m_socket(m_io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(ip), port))
+    , m_socket(m_io_service)
   {
-    //m_socket.open(boost::asio::ip::udp::v4());
+    m_socket.open(boost::asio::ip::udp::v4());
+
+    int one = 1;
+    setsockopt(m_socket.native_handle(), SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one));
+    m_socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(ip), port));
   }
+
 
   size_t receive() {
     boost::asio::ip::udp::endpoint sender_endpoint;

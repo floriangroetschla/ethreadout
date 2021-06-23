@@ -23,7 +23,9 @@ main(int argc, char* argv[])
   for (uint i = 0; i < 4; ++i) {
     threads.emplace_back([&]() {
       UDPSender sender("127.0.0.1", 30000 + i, "127.0.0.1", 30000);
-      sender.send(payload, sizeof(superchunk));
+      while (true) {
+        sender.send(payload, sizeof(superchunk));
+      }
     });
   }
 
