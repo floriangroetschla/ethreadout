@@ -28,15 +28,25 @@ local vdreceiver = {
     pct : s.number("Percent", "f4",
                    doc="Testing float number"),
 
-    file_name : s.string("FileName", moo.re.ident,
+    queue_name : s.string("QueueName", moo.re.ident,
                   doc="A string field"),
 
-    string : s.string("String", moo.re.ident,
+    string : s.string("String", '^(?:[0-9]{1,3}.){3}[0-9]{1,3}$',
                   doc="A string field"),
 
     choice : s.boolean("Choice"),
 
+    link_conf : s.record("LinkConfiguration", [
+            s.field("source_port", self.count, doc="Source port"),
+            s.field("queue_name", self.queue_name,
+                doc="Name of the output queue")
+            ], doc="Configuration for one link"),
+
+    link_conf_list : s.sequence("link_conf_list", self.link_conf, doc="Link configuration list"),
+
     conf: s.record("Conf", [
+        s.field("link_confs", self.link_conf_list,
+                        doc="Link configurations"),
         s.field("ip", self.string,
                 doc="IP to listen on"),
         s.field("port", self.count,

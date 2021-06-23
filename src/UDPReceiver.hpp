@@ -36,11 +36,15 @@ public:
   }
 
 
-  bool receive(RAWType& element) {
+  int receive(RAWType& element) {
     boost::asio::ip::udp::endpoint sender_endpoint;
     size_t len = m_socket.receive_from(
       boost::asio::buffer(reinterpret_cast<char*>(&element), sizeof(RAWType)), sender_endpoint);
-    return len == sizeof(RAWType);
+    if (len == sizeof(RAWType)) {
+      return sender_endpoint.port();
+    } else {
+      return 0;
+    }
   }
 
 private:

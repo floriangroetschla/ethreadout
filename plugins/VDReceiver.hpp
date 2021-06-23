@@ -36,15 +36,21 @@ private:
   void do_conf(const nlohmann::json& obj);
   void do_start(const nlohmann::json& obj);
   void do_stop(const nlohmann::json& obj);
-  void do_work();
+  void do_work(UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>& receiver);
 
-  std::unique_ptr<UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>> m_receiver;
-
-  dunedaq::readout::ReusableThread m_work_thread;
+  std::vector<std::unique_ptr<dunedaq::readout::ReusableThread>> m_worker_threads;
   std::atomic<bool> m_run_marker;
 
   using raw_queue_qt = appfwk::DAQSink<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>;
-  std::unique_ptr<raw_queue_qt> m_raw_data_sink;
+  std::map<int, std::unique_ptr<raw_queue_qt>> m_port_map;
+  std::map<std::string, std::string> m_queues;
+
+  std::vector<std::unique_ptr<UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>>> m_receivers;
+
+  struct Worker {
+    UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT> receiver;
+    dunedaq::readout::ReusableThread thread;
+  };
 
 };
 } // namespace ethreadout

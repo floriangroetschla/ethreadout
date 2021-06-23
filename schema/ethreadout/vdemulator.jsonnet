@@ -31,7 +31,7 @@ local vdemulator = {
     file_name : s.string("FileName", moo.re.ident,
                   doc="A string field"),
 
-    string : s.string("String", moo.re.ident,
+    string : s.string("String", '^(?:[0-9]{1,3}.){3}[0-9]{1,3}$',
                   doc="A string field"),
 
     choice : s.boolean("Choice"),
