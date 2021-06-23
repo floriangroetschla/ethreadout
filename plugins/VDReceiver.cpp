@@ -95,6 +95,7 @@ void VDReceiver::do_work(UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STR
     if (port == 0) {
       TLOG() << "Could not receive element";
     } else {
+      if (element.get_timestamp())
       if (m_port_map.find(port) == m_port_map.end()) {
         TLOG() << "Received packet from unknown source port";
       } else {

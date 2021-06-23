@@ -14,6 +14,7 @@ moo.otypes.load_types('readout/datalinkhandler.jsonnet')
 moo.otypes.load_types('readout/datarecorder.jsonnet')
 moo.otypes.load_types('ethreadout/vdemulator.jsonnet')
 moo.otypes.load_types('ethreadout/vdreceiver.jsonnet')
+moo.otypes.load_types('flxlibs/felixcardreader.jsonnet')
 
 # Import new types
 import dunedaq.cmdlib.cmd as basecmd # AddressedCmd,
@@ -25,6 +26,7 @@ import dunedaq.readout.datalinkhandler as dlh
 import dunedaq.readout.datarecorder as bfs
 import dunedaq.ethreadout.vdemulator as vde
 import dunedaq.ethreadout.vdreceiver as vdr
+import dunedaq.flxlibs.felixcardreader as flxcr
 
 from appfwk.utils import mcmd, mrccmd, mspec
 
@@ -41,7 +43,8 @@ def generate(
         NUMBER_OF_TP_PRODUCERS=1,
         DATA_RATE_SLOWDOWN_FACTOR = 1,
         RUN_NUMBER = 333,
-        DATA_FILE="./frames.bin"
+        DATA_FILE="./frames.bin",
+        USE_FELIX = False
 ):
 
     # Define modules and queues
@@ -71,12 +74,6 @@ def generate(
 
 
     mod_specs = [
-                    mspec("fake_source", "FakeCardReader", [
-                        app.QueueInfo(name=f"output_{idx}", inst=f"{FRONTEND_TYPE}_link_emulator_{idx}", dir="output")
-                        for idx in range(NUMBER_OF_DATA_PRODUCERS)
-                    ]),
-
-                ] + [
                     mspec(f"datahandler_{idx}", "DataLinkHandler", [
                         app.QueueInfo(name="raw_input", inst=f"{FRONTEND_TYPE}_link_{idx}", dir="input"),
                         app.QueueInfo(name="timesync", inst="time_sync_q", dir="output"),
@@ -107,6 +104,22 @@ def generate(
                     ])
                 ]
 
+    if USE_FELIX:
+        mod_specs.append(mspec("flxcard_0", "FelixCardReader", [
+            app.QueueInfo(name=f"output_{idx}", inst=f"{FRONTEND_TYPE}_link_emulator_{idx}", dir="output")
+            for idx in range(min(5, NUMBER_OF_DATA_PRODUCERS))
+        ]))
+        if NUMBER_OF_DATA_PRODUCERS > 5 :
+            mod_specs.append(mspec("flxcard_1", "FelixCardReader", [
+                app.QueueInfo(name=f"output_{idx}", inst=f"{FRONTEND_TYPE}_link_emulator_{idx}", dir="output")
+                for idx in range(5, NUMBER_OF_DATA_PRODUCERS)
+            ]))
+    else:
+        mod_specs.append(mspec("fake_source", "FakeCardReader", [
+            app.QueueInfo(name=f"output_{idx}", inst=f"{FRONTEND_TYPE}_link_emulator_{idx}", dir="output")
+            for idx in range(NUMBER_OF_DATA_PRODUCERS)
+        ]))
+
     init_specs = app.Init(queues=queue_specs, modules=mod_specs)
 
     jstr = json.dumps(init_specs.pod(), indent=4, sort_keys=True)
@@ -119,8 +132,26 @@ def generate(
         data=init_specs
     )
 
+    CARDID = 0
 
     confcmd = mrccmd("conf", "INITIAL", "CONFIGURED", [
+        ("flxcard_0",flxcr.Conf(card_id=CARDID,
+                                logical_unit=0,
+                                dma_id=0,
+                                chunk_trailer_size= 32,
+                                dma_block_size_kb= 4,
+                                dma_memory_size_gb= 4,
+                                numa_id=0,
+                                num_links=min(5,NUMBER_OF_DATA_PRODUCERS))),
+        ("flxcard_1",flxcr.Conf(card_id=CARDID,
+                                logical_unit=1,
+                                dma_id=0,
+                                chunk_trailer_size= 32,
+                                dma_block_size_kb= 4,
+                                dma_memory_size_gb= 4,
+                                numa_id=0,
+                                num_links=max(0, NUMBER_OF_DATA_PRODUCERS - 5))),
+
         ("fake_source",fcr.Conf(
             link_confs=[fcr.LinkConfiguration(
                 geoid=fcr.GeoID(system="TPC", region=0, element=idx),
@@ -176,6 +207,7 @@ def generate(
         ("fragment_consumer", startpars),
         ("vdemulator_.*", startpars),
         ("vdreceiver", startpars),
+        ("flxcard.*", startpars),
     ])
 
     jstr = json.dumps(startcmd.pod(), indent=4, sort_keys=True)
@@ -190,6 +222,7 @@ def generate(
         ("fragment_consumer", None),
         ("vdemulator_.*", None),
         ("vdreceiver", None),
+        ("flxcard.*", None),
     ])
 
     jstr = json.dumps(stopcmd.pod(), indent=4, sort_keys=True)
@@ -233,8 +266,9 @@ if __name__ == '__main__':
     @click.option('-s', '--data-rate-slowdown-factor', default=10)
     @click.option('-r', '--run-number', default=333)
     @click.option('-d', '--data-file', type=click.Path(), default='./frames.bin')
+    @click.option('-x', '--use-felix', is_flag=True)
     @click.argument('json_file', type=click.Path(), default='fake_readout.json')
-    def cli(frontend_type, number_of_data_producers, number_of_tp_producers, data_rate_slowdown_factor, run_number, data_file, json_file):
+    def cli(frontend_type, number_of_data_producers, number_of_tp_producers, data_rate_slowdown_factor, run_number, data_file, use_felix, json_file):
         """
           JSON_FILE: Input raw data file.
           JSON_FILE: Output json configuration file.
@@ -248,6 +282,7 @@ if __name__ == '__main__':
                 DATA_RATE_SLOWDOWN_FACTOR = data_rate_slowdown_factor,
                 RUN_NUMBER = run_number,
                 DATA_FILE = data_file,
+                USE_FELIX = use_felix
             ))
 
         print(f"'{json_file}' generation completed.")
