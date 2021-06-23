@@ -26,7 +26,7 @@ VDReceiver::init(const data_t& args)
 {
   auto ini = args.get<appfwk::app::ModInit>();
   for (const auto& qi : ini.qinfos) {
-    if (qi.dir != "input") {
+    if (qi.dir != "output") {
       continue;
     }
 
@@ -95,7 +95,11 @@ void VDReceiver::do_work(UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STR
     if (port == 0) {
       TLOG() << "Could not receive element";
     } else {
-      m_port_map[port]->push(element);
+      if (m_port_map.find(port) == m_port_map.end()) {
+        TLOG() << "Received packet from unknown source port";
+      } else {
+        m_port_map[port]->push(element);
+      }
     }
   }
 }
