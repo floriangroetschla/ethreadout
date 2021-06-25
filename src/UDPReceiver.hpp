@@ -32,6 +32,8 @@ public:
 
     int one = 1;
     setsockopt(m_socket.native_handle(), SOL_SOCKET, SO_REUSEPORT, &one, sizeof(one));
+    int size = 134217728;
+    setsockopt(m_socket.native_handle(), SOL_SOCKET, SO_RCVBUF, &size, (socklen_t)sizeof(int));
     m_socket.bind(boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(ip), port));
   }
 
