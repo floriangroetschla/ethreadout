@@ -46,6 +46,11 @@ private:
   using raw_queue_qt = appfwk::DAQSource<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>;
   std::unique_ptr<raw_queue_qt> m_raw_data_source;
 
+  // Stats
+  std::atomic<uint64_t> m_packets_sent = 0;
+  std::atomic<uint64_t> m_send_errors = 0;
+  std::atomic<uint64_t> m_packets_received = 0;
+
 };
 } // namespace ethreadout
 } // namespace dunedaq

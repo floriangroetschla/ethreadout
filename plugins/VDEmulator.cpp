@@ -9,6 +9,8 @@
 #include "ethreadout/vdemulator/Nljs.hpp"
 #include "ethreadout/vdemulator/Structs.hpp"
 #include "appfwk/DAQModuleHelper.hpp"
+#include "ethreadout/vdemulatorinfo/InfoStructs.hpp"
+#include "ethreadout/vdemulatorinfo/InfoNljs.hpp"
 
 namespace dunedaq {
 namespace ethreadout {
@@ -34,8 +36,14 @@ VDEmulator::init(const data_t& args)
 }
 
 void
-VDEmulator::get_info(opmonlib::InfoCollector& ci, int level)
+VDEmulator::get_info(opmonlib::InfoCollector& ci, int /*level*/)
 {
+  vdemulatorinfo::Info info;
+  info.packets_sent = m_packets_sent;
+  info.packets_received = m_packets_received;
+  info.send_errors = m_send_errors;
+
+  ci.add(info);
 }
 
 void
@@ -47,14 +55,14 @@ VDEmulator::do_conf(const data_t& args)
 }
 
 void
-VDEmulator::do_start(const data_t& args)
+VDEmulator::do_start(const data_t& /*args*/)
 {
   m_run_marker = true;
   m_work_thread.set_work(&VDEmulator::do_work, this);
 }
 
 void
-VDEmulator::do_stop(const data_t& args)
+VDEmulator::do_stop(const data_t& /*args*/)
 {
   m_run_marker = false;
   while (!m_work_thread.get_readiness()) {
@@ -68,7 +76,12 @@ void VDEmulator::do_work()
   while (m_run_marker) {
     try {
       m_raw_data_source->pop(element, std::chrono::milliseconds(100));
-      m_sender->send(reinterpret_cast<char*>(&element), sizeof(element));
+      m_packets_received++;
+      if (m_sender->send(reinterpret_cast<char*>(&element), sizeof(element))) {
+        m_packets_sent++;
+      } else {
+        m_send_errors++;
+      }
     } catch (const dunedaq::appfwk::QueueTimeoutExpired& excpt) {
       continue;
     }

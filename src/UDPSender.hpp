@@ -31,9 +31,9 @@ public:
     //m_socket.open(boost::asio::ip::udp::v4());
   }
 
-  bool send(const char* datagram, int len) {
+  bool send(const char* datagram, size_t len) {
     auto sent = m_socket.send_to(boost::asio::buffer(datagram, len), m_endpoint, 0, m_err);
-    return true;
+    return sent == len;
   }
 
   private:
