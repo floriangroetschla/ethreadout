@@ -52,6 +52,13 @@ private:
     dunedaq::readout::ReusableThread thread;
   };
 
+  // Stats
+  std::atomic<uint64_t> m_unknown_source_port = 0;
+  std::atomic<uint64_t> m_packets_received = 0;
+  std::atomic<uint64_t> m_receive_failed = 0;
+  std::atomic<uint64_t> m_packets_out_of_order = 0;
+  std::atomic<uint64_t> m_packets_pushed_to_queue = 0;
+
 };
 } // namespace ethreadout
 } // namespace dunedaq

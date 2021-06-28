@@ -9,6 +9,8 @@
 #include "ethreadout/vdreceiver/Nljs.hpp"
 #include "ethreadout/vdreceiver/Structs.hpp"
 #include "appfwk/DAQModuleHelper.hpp"
+#include "ethreadout/vdreceiverinfo/InfoStructs.hpp"
+#include "ethreadout/vdreceiverinfo/InfoNljs.hpp"
 
 namespace dunedaq {
 namespace ethreadout {
@@ -39,8 +41,16 @@ VDReceiver::init(const data_t& args)
 }
 
 void
-VDReceiver::get_info(opmonlib::InfoCollector& ci, int level)
+VDReceiver::get_info(opmonlib::InfoCollector& ci, int /*level*/)
 {
+  vdreceiverinfo::Info info;
+  info.unknown_source_port = m_unknown_source_port;
+  info.packets_received = m_packets_received;
+  info.receive_failed = m_receive_failed;
+  info.packets_out_of_order = m_packets_out_of_order;
+  info.packets_pushed_to_queue = m_packets_pushed_to_queue;
+
+  ci.add(info);
 }
 
 void
@@ -68,7 +78,7 @@ VDReceiver::do_conf(const data_t& args)
 }
 
 void
-VDReceiver::do_start(const data_t& args)
+VDReceiver::do_start(const data_t& /*args*/)
 {
   m_run_marker = true;
   for (uint i = 0; i < m_worker_threads.size(); ++i) {
@@ -77,7 +87,7 @@ VDReceiver::do_start(const data_t& args)
 }
 
 void
-VDReceiver::do_stop(const data_t& args)
+VDReceiver::do_stop(const data_t& /*args*/)
 {
   m_run_marker = false;
   for (auto& thread : m_worker_threads) {
@@ -90,16 +100,23 @@ VDReceiver::do_stop(const data_t& args)
 void VDReceiver::do_work(UDPReceiver<dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT>& receiver)
 {
   dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT element;
+  uint64_t last_timestamp = 0;
   while (m_run_marker) {
     int port = receiver.receive(element);
     if (port == 0) {
+      m_receive_failed++;
       TLOG() << "Could not receive element";
     } else {
-      if (element.get_timestamp())
+      m_packets_received++;
+      if (element.get_timestamp() != last_timestamp + dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT::tick_dist * dunedaq::readout::types::WIB_SUPERCHUNK_STRUCT::frames_per_element) {
+        m_packets_out_of_order++;
+      }
       if (m_port_map.find(port) == m_port_map.end()) {
+        m_unknown_source_port++;
         TLOG() << "Received packet from unknown source port";
       } else {
         m_port_map[port]->push(element);
+        m_packets_pushed_to_queue++;
       }
     }
   }
